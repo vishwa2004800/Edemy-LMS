@@ -1,11 +1,9 @@
-// create a fun that will ineract with mongo db
 import mongoose from "mongoose";
 
-// connect to mongo db
-const connectDB = async ()=> {
-    mongoose.connection.on('connected',()=> console.log('database connected'))
+// Connect to the MongoDB database
+const connectDB = async () => {
+    mongoose.connection.on('connected', () => console.log('Database Connected'))
 
-    // add mongo db conn string
     await mongoose.connect(`${process.env.MONGODB_URI}/lms`)
 }
 
