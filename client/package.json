@@ -16,6 +16,7 @@
     "rc-progress": "^4.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-draggable": "^4.4.6",
     "react-router-dom": "^7.3.0",
     "react-simple-star-rating": "^5.1.7",
     "react-youtube": "^10.1.0",

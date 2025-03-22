@@ -157,6 +157,7 @@ const Player = () => {
           {/* <img src={courseData ? courseData.courseThumbnail : ''} alt="" /> */}
         </div>
       </div>
+      
 
       <Footer/>
     </>
