@@ -76,7 +76,7 @@ export const AppContextProvider = (props) => {
         if(user){
             logToken()
         }
-    })
+    },[user])
             
 
 

@@ -1,6 +1,7 @@
 import { Webhook } from "svix";
 import User from "../models/User.js";
 import dotenv from 'dotenv';
+import Course from "../models/Courses.js";
 
 
 
@@ -8,62 +9,127 @@ export const clerkWebhooks = async (req, res) => {
     console.log("Webhook event received:", JSON.stringify(req.body, null, 2));
 
     try {
-        // Verify headers exist
-        if (!req.headers["svix-id"] || 
-            !req.headers["svix-timestamp"] || 
-            !req.headers["svix-signature"]) {
-            console.error("Missing Svix headers");
-            return res.status(400).json({ error: "Missing Svix headers" });
-        }
+       
 
-        // Rest of your verification and processing
         const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
 
-        try {
+        
             await whook.verify(JSON.stringify(req.body), {
                 "svix-id": req.headers["svix-id"],
                 "svix-timestamp": req.headers["svix-timestamp"],
                 "svix-signature": req.headers["svix-signature"]
             });
-        } catch (err) {
-            console.error("Webhook verification failed:", err);
-            return res.status(400).json({ error: "Webhook verification failed" });
-        }
-
+        
         const { data, type } = req.body;
         
-        // Note: In your code, you use _type but Clerk typically uses "type"
-        // Make sure it matches what Clerk is actually sending
         
         switch (type) { 
             case 'user.created': {
-                // const userData = {
-                //     _id: data.id,
-                //     email: data.email_addresses[0].email_address, 
-                //     name: `${data.first_name || ''} ${data.last_name || ''}`.trim(),
-                //     imageUrl: data.image_url || '', 
-                // };
+               
                 const userData = {
                     _id: data.id,
-                    email: data.email_addresses[0]?.email_address || '', 
-                    name: `${data.first_name || ''} ${data.last_name || ''}`.trim(),
-                    imageUrl: data.image_url || '', 
+                    email: data.email_addresses[0].email_address, 
+                    name: data.first_name + " " + data.last_name,
+                    imageUrl: data.image_url, 
                 };
+                console.log("Attempting to save user to DB:", userData);
 
-                console.log("Saving user to DB:", userData);
 
                 await User.create(userData);
-                return res.json({ success: true });
+                res.json({});
+                break;
+            }
+
+            case 'user.updated':{
+                
+                const userData = {
+                    email: data.email_addresses[0].email_address, 
+                    name: data.first_name + " " + data.last_name,
+                    imageUrl: data.image_url, 
+                }
+                await User.findByIdAndUpdate(data.id,userData)
+                res.json({})
+                break;
+
+            }
+
+            case 'user.deleted':{
+                await User.findByIdAndDelete(data.id)
+                res.json({})
+                break;
+
             }
             
-            // Other cases with return statements
-            // ...
+          
             
             default:
-                return res.json({ received: true });
+                break;
         }
     } catch (error) {
-        console.error("Webhook error:", error);
-        return res.status(500).json({ success: false, message: error.message });
+        res.json({ success: false, message: error.message });
     }
 };
+
+const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY)
+
+export const stripeWebhooks = async(request, response)=>{
+    const sig = request.headers['stripe-signature'];
+
+    let event;
+
+    try {
+        event = Stripe.webhooks.constructEvent(request.body, sig, process.env.STRIPE_SECRET_KEY);
+    } catch (err) {
+        response.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Handle the event
+switch (event.type) {
+    case 'payment_intent.succeeded':
+        {
+            const paymentIntent = event.data.object;
+            const paymentIntentId = paymentIntent.id;
+            const session = await stripeInstance.checkout.sessions.list({
+                payment_intent: paymentIntentId
+            })
+            
+            const { purchaseId } = session.data[0].metadata;
+            
+            const purchaseData = await Purchase.findById(purchaseId)
+            const userData = await User.findById(purchaseData.userId)
+            const courseData = await Course.findById(purchaseData.courseId.toString())
+    
+            courseData.enrolledStudents.push(userData)
+            await courseData.save()
+    
+            userData.enrolledCourses.push(courseData._id)
+            await userData.save()
+    
+            purchaseData.status = 'completed'
+            await purchaseData.save()
+            break;
+        }
+       
+    case 'payment_method.payment_failed':
+        {
+            const paymentIntent = event.data.object;
+            const paymentIntentId = paymentIntent.id;
+            const session = await stripeInstance.checkout.sessions.list({
+                payment_intent: paymentIntentId
+            })
+            
+            const { purchaseId } = session.data[0].metadata;
+            const purchaseData = await Purchase.findById(purchaseId)
+            purchaseData.status = 'Failed'
+            await purchaseData.save()
+            break;
+            
+        }
+       
+            default:
+            console.log(`Unhandled event type ${event.type}`);
+}
+
+response.json({received:true})
+
+}
