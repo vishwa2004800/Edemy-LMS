@@ -3,10 +3,14 @@ import { dummyCourses } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
 import humanizeDuration from 'humanize-duration'
 import {useAuth,useUser} from "@clerk/clerk-react"
+import axios from 'axios'
+import { toast } from "react-toastify";
 export const AppContext = createContext()
 
 
 export const AppContextProvider = (props) => {
+
+    // const backendUrl = import.meta.env.VITE_BACKEND_URL
 
     const currency = import.meta.env.VITE_CURRENCY
 
@@ -20,7 +24,28 @@ export const AppContextProvider = (props) => {
     const [enrolledCourses , setEnrolledCourses] = useState([])
 
     const fetchAllCourses = async()=>{
-        setAllCourses(dummyCourses)
+        try{
+            // return all the courses available in database
+            const {data} = await axios.get('/api/course/all');
+
+            if (data.sucess)
+            {
+                setAllCourses(data.courses)
+            }
+
+            else{
+                // display error message using react toastify
+                toast.error(data.message)
+
+            }
+
+        }
+        catch{
+            toast.error(error.message)
+
+
+
+        }
     }
 
     // function to caluclate avg ratings

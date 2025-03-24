@@ -17,7 +17,9 @@ await connectDB()
 await connectCloudinary()
 
 // Middlewares
-app.use(cors())
+// app.use(cors())
+app.use(cors({ origin: "http://localhost:5173" }));
+
 app.use(clerkMiddleware())
 
 // Routes
@@ -26,20 +28,23 @@ app.post('/clerk', express.json(), clerkWebhooks)
 app.use('/api/educator', express.json(), educatorRouter)
 
 app.use('/api/course', express.json(), courseRouter)
+app.get("/api/course/all", (req, res) => {
+    res.json({ message: "Courses fetched successfully!" });
+  });
 
 app.use('/api/user', express.json(),userRouter)
 
 app.post('/stripe', express.raw({type:'application/json'}), stripeWebhooks)
 
 
-// app.post('/test-webhook', express.json(), (req, res) => {
-//     console.log('Test webhook received!');
-//     console.log('Headers:', JSON.stringify(req.headers, null, 2));
-//     console.log('Body:', JSON.stringify(req.body, null, 2));
+app.post('/test-webhook', express.json(), (req, res) => {
+    console.log('Test webhook received!');
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('Body:', JSON.stringify(req.body, null, 2));
     
-//     // Always respond with success
-//     res.status(200).json({ success: true });
-//   });
+    // Always respond with success
+    res.status(200).json({ success: true });
+  });
 
 
 // Port
