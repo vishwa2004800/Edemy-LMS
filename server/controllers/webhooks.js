@@ -2,6 +2,7 @@ import { Webhook } from "svix";
 import User from "../models/User.js";
 import dotenv from 'dotenv';
 import Course from "../models/Courses.js";
+import Stripe from "stripe";
 
 
 
@@ -78,7 +79,7 @@ export const stripeWebhooks = async(request, response)=>{
     let event;
 
     try {
-        event = Stripe.webhooks.constructEvent(request.body, sig, process.env.STRIPE_SECRET_KEY);
+        event = Stripe.webhooks.constructEvent(request.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (err) {
         response.status(400).send(`Webhook Error: ${err.message}`);
     }
@@ -120,7 +121,7 @@ switch (event.type) {
             
             const { purchaseId } = session.data[0].metadata;
             const purchaseData = await Purchase.findById(purchaseId)
-            purchaseData.status = 'Failed'
+            purchaseData.status = 'failed'
             await purchaseData.save()
             break;
             
@@ -133,3 +134,5 @@ switch (event.type) {
 response.json({received:true})
 
 }
+
+
