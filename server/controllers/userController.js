@@ -70,7 +70,7 @@ export const purchaseCourse = async (req, res) => {
 
 // payment session
   const session = await stripeInstance.checkout.sessions.create({
-    success_url:`${origin}/loading/stu-enroll`,
+    success_url:`${origin}/loading/myenroll`,
     cancel_url:`${origin}/`,
     line_items:line_items,
     mode:'payment',
@@ -79,6 +79,8 @@ export const purchaseCourse = async (req, res) => {
         purchaseId: newPurchase._id.toString()
     }
   })
+  console.log('Stripe Session:', session);
+
 
   res.json({success:true,session_url:session.url})
 
