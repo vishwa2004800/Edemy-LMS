@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { UserButton,useClerk,useUser } from '@clerk/clerk-react'
 import { AppContext } from '../../context/AppContext'
 import { toast } from 'react-toastify'
+import axios from 'axios'
 
 const Navbar = () => {
 
@@ -24,10 +25,13 @@ const Navbar = () => {
             const token = await getToken()
             const { data } = await axios.get(backendUrl + '/api/educator/update-role',
             {headers: {Authorization: `Bearer ${token}`}})
+
+            console.log("API Response:", data);
     
             if (data.success){
                 setIsEducator(true)
                 toast.success(data.message)
+                console.log("Updated isEducator:", true); 
             }
             else{
                 toast.error(data.message)
