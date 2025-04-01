@@ -132,6 +132,31 @@ export const getUserCourseProgress = async (req, res) =>{
     }
 }
 
+export const handlePayPalSuccess = async (details) => {
+    try {
+        const token = await getToken();
+        const response = await axios.post(
+          `${backendUrl}/api/user/purchase/paypal-success`,  // Fixed string interpolation
+          {
+            courseId: courseData._id,
+            paymentId: details.id,
+            paymentStatus: details.status,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },  // Fixed Bearer token format
+          }
+        );
+
+        if (response.data.success) {
+            toast.success("Course enrolled successfully!");
+            setIsEnrolled(true);
+        }
+    } catch (error) {
+        toast.error("Failed to verify payment");
+    }
+};
+
+
 // Add user rating function
 export const addUserRating = async (req, res)=>{
     const userId = req.auth.userId;

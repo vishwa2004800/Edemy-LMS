@@ -1,10 +1,3 @@
-
-
-
-
- 
-   
-
 import { createContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import humanizeDuration from 'humanize-duration'
@@ -160,6 +153,7 @@ export const AppContextProvider = (props) => {
         userData,
         setUserData,
         getToken,
+        backendUrl,
         loading
     }
 
