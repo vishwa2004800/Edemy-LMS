@@ -1,17 +1,18 @@
-
-
 import express from 'express'
 import cors from 'cors'
 import 'dotenv/config'
 import connectDB from './configs/mongodb.js'
-import { clerkWebhooks, stripeWebhooks } from './controllers/webhooks.js'
+import { clerkWebhooks} from './controllers/webhooks.js'
 import educatorRouter from './routes/educatorRoutes.js'
 import { clerkMiddleware } from '@clerk/express'
 import connectCloudinary from './configs/cloudinary.js'
 import courseRouter from './routes/courseRoutes.js'
 import userRouter from './routes/userRoutes.js'
 import videoRouter from './routes/videoRoutes.js'
-
+// import Enrollment from './models/EnrollmentModel.js'
+import enrollmentRoutes from './routes/enrollmentRoutes.js'
+// import paymentLink from 'razorpay/dist/types/paymentLink.js'
+import paymentRoutes from './routes/payment.js'
 
 const app = express()
 
@@ -28,6 +29,7 @@ app.use(cors({
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(clerkMiddleware())
+// const paymentRoutes = require("./routes/paymentRoutes")
 
 // Routes
 app.get('/', (req, res) => res.send("API Working"))
@@ -37,6 +39,10 @@ app.use('/api/course', courseRouter)
 app.use('/api/video', videoRouter)  // Video Routes
 
 app.use('/api/user', userRouter)
+app.use("/api/enrollment", enrollmentRoutes);
+app.use("/api/user", paymentRoutes)
+
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
